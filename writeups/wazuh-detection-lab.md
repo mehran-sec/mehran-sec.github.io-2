@@ -70,7 +70,7 @@ hydra -l testuser -P passwords.txt ssh://<VM_IP> -t 4
 
 **Before.** With only default rules, every failed attempt became its own level 5 alert (rule `5760`, "sshd: authentication failed"). The only level 10 alert came from a generic syslog rule (`2502`, "User missed the password more than one time"). Nothing told me this was a brute-force attempt against SSH.
 
-![Default rules before the custom SSH rule](assets/"SSH_Auth_Failed _Alert.png")
+![Default rules before the custom SSH rule](<assets/SSH_Auth_Failed _Alert.png>)
 
 **The rule:**
 
@@ -91,7 +91,7 @@ hydra -l testuser -P passwords.txt ssh://<VM_IP> -t 4
 **After.** The same attack now produces one dedicated level 10 alert, rule `100100`, tagged T1110.001.
 
 
-![Rule 100100 firing after the attack](<"assets/SSH Brute force Alert Custom.png")
+![Rule 100100 firing after the attack](<assets/SSH Brute force Alert Custom.png>)
 
 **Known gaps:** a slow attack (fewer than five attempts a minute) and an attack spread across many source addresses are both missed. An admin who mistypes a password repeatedly can trigger it. All of this is in the detection's requirement document.
 
@@ -112,7 +112,7 @@ sudo -i          # root shell
 **Before.** Every sudo to root produced the same generic alert: rule `5402`, "Successful sudo to ROOT executed", at level 3, plus PAM session noise (`5501` and `5502`). A harmless command and a full root shell looked identical.
 
 
-![Genric sudo alert before the custom rule](<"assets/Use of sudo Before Custom.png")
+![Genric sudo alert before the custom rule](<assets/Use of sudo Before Custom.png>)
 
 **The rule:**
 
@@ -132,7 +132,7 @@ sudo -i          # root shell
 **After.** Root shells now raise their own level 8 alert with the T1548 tag. `sudo whoami` still produces only the generic level 3 alert.
 
 
-![Rule 10110 firing for a root shell](assets/"Use of Sudo after Custom.png")
+![Rule 10110 firing for a root shell](<assets/Use of Sudo after Custom.png>)
 
 **Known false positives:** admins who legitimately use `sudo -i` or `sudo su`, and `sudo bash -c "..."` or `sudo sh -c "..."` used for ordinary tasks. Tuning would mean excluding known admin accounts.
 
