@@ -70,7 +70,7 @@ hydra -l testuser -P passwords.txt ssh://<VM_IP> -t 4
 
 **Before.** With only default rules, every failed attempt became its own level 5 alert (rule `5760`, "sshd: authentication failed"). The only level 10 alert came from a generic syslog rule (`2502`, "User missed the password more than one time"). Nothing told me this was a brute-force attempt against SSH.
 
-![Default rules before the custom SSH rule](<../assets/SSH_Auth_Failed _Alert.png>)
+![Default rules before the custom SSH rule](assets/"SSH_Auth_Failed _Alert.png")
 
 **The rule:**
 
@@ -87,15 +87,11 @@ hydra -l testuser -P passwords.txt ssh://<VM_IP> -t 4
 </group>
 ```
 
-- `if_matched_sid 5760` builds on the default "authentication failed" rule instead of re-parsing the log.
-- `frequency="5"` and `timeframe="60"` mean five matches within 60 seconds.
-- `same_source_ip` counts only attempts from one address, so failures from different people do not add up.
-- The `mitre` tag puts the technique on the alert, so analysts see the ATT&CK mapping.
 
 **After.** The same attack now produces one dedicated level 10 alert, rule `100100`, tagged T1110.001.
 
 
-![Rule 100100 firing after the attack](<../assets/SSH Brute force Alert Custom.png>)
+![Rule 100100 firing after the attack](<"assets/SSH Brute force Alert Custom.png")
 
 **Known gaps:** a slow attack (fewer than five attempts a minute) and an attack spread across many source addresses are both missed. An admin who mistypes a password repeatedly can trigger it. All of this is in the detection's requirement document.
 
@@ -116,7 +112,7 @@ sudo -i          # root shell
 **Before.** Every sudo to root produced the same generic alert: rule `5402`, "Successful sudo to ROOT executed", at level 3, plus PAM session noise (`5501` and `5502`). A harmless command and a full root shell looked identical.
 
 
-![Genric sudo alert before the custom rule](<../assets/Use of sudo Before Custom.png>)
+![Genric sudo alert before the custom rule](<"assets/Use of sudo Before Custom.png")
 
 **The rule:**
 
@@ -133,15 +129,10 @@ sudo -i          # root shell
 </group>
 ```
 
-- `if_sid 5402` makes it a child of the generic sudo rule. For matching commands, the alert is `100110` instead of `5402`.
-- The regex looks at the exact command in the sudo log and matches only shells. Commands such as `apt update`, `whoami` or `cat /etc/bash.bashrc` do not match.
-- Level 8 means "worth a look". Admins use `sudo -i` routinely, so a higher level can cause unnecassary panic.
-- You can learn about regex , as it is used mostly 
-
 **After.** Root shells now raise their own level 8 alert with the T1548 tag. `sudo whoami` still produces only the generic level 3 alert.
 
 
-![Rule 10110 firing for a root shell](<../assets/Use of Sudo after Custom.png>)
+![Rule 10110 firing for a root shell](assets/"Use of Sudo after Custom.png")
 
 **Known false positives:** admins who legitimately use `sudo -i` or `sudo su`, and `sudo bash -c "..."` or `sudo sh -c "..."` used for ordinary tasks. Tuning would mean excluding known admin accounts.
 
