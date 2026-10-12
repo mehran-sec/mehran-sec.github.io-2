@@ -14,9 +14,9 @@ This project is that workflow for Wazuh. I wrote custom rules for five attack be
 Deployment is manual on purpose. I explain why in the last section.
 
 ## Lab setup
-- **Wazuh:** v4.14.8, single-node (manager, indexer and dashboard on one host), installed natively on Ubuntu with the Wazuh installation assistant
+- **Wazuh:** v4.14.8, single-node (manager, indexer and dashboard on one host)
 - **Endpoint:** an Ubuntu VM on the same laptop, running the Wazuh agent
-- **Attacker:** the laptop itself, attacking only the VM that I own
+- **Attacker:** kali linux , attacking only the VM that I own
 
 ![Lab architecture](assets/ss_architecture.png)
 
@@ -38,7 +38,7 @@ A rule goes through the same steps every time:
 
 1. **Requirement.** A short document: the threat, the data source, the logic, the MITRE ATT&CK technique, expected false positives and known gaps.
 2. **Rule.** Written in `rules/`. Custom rule IDs stay in the 100000-120000 range, and the default Wazuh ruleset is never edited.
-3. **Test cases.** Real log lines (from end points ) saved in `tests/`, with the result I expect for each.
+3. **Test cases.** Real log lines (from end points ) saved in `tests/`.
 4. **Deploy.** `scripts/deploy.sh` does the following:
    - validates the XML
    - backs up the current rules
@@ -48,6 +48,8 @@ A rule goes through the same steps every time:
    - restarts the manager and checks that it is running
 5. **Test.** `wazuh-logtest` with the saved log lines, then a real attack against the VM.
 6. **Commit and push.** CI then checks the rule files (explained below).
+
+....
 
 ## The detections
 
@@ -59,7 +61,8 @@ A rule goes through the same steps every time:
 | 4 | TODO | SSH key or cron job added for persistence | T1098.004 / T1053.003 | TODO |
 | 5 | TODO | Reverse-shell style command executed | T1059.004 | TODO |
 
-### 1. SSH password-guessing burst (100100)
+## 1. SSH password-guessing burst (100100)
+
 **Goal:** one failed login is noise, but several from one address in a minute is an attack.
 
 **Attack:** Hydra from the laptop against the VM:
@@ -79,7 +82,8 @@ hydra -l testuser -P passwords.txt ssh://<VM_IP> -t 4
   <rule id="100100" level="10" frequency="5" timeframe="60">
     <if_matched_sid>5760</if_matched_sid>
     <same_source_ip />
-    <description>sshd: 5+ failed SSH password attempts from the same IP within 60s (custom, lower threshold)</description>
+    <description>sshd: 5+ failed SSH password attempts from
+     the same IP within 60s (custom, lower threshold)</description>
     <mitre>
       <id>T1110.001</id>
     </mitre>
@@ -97,7 +101,9 @@ hydra -l testuser -P passwords.txt ssh://<VM_IP> -t 4
 
 I covered an earlier version of this SSH detection in [Detecting SSH Brute-Force with Wazuh](writeups.html#ssh-bruteforce-detection).
 
-### 2. Root shell opened through sudo (100110)
+
+## 2. Root shell opened through sudo (100110)
+
 **Goal:** `sudo apt update` and `sudo su` are very different events, but Wazuh treats them the same.
 
 **Attack (on the VM):**
@@ -136,17 +142,10 @@ sudo -i          # root shell
 
 **Known false positives:** admins who legitimately use `sudo -i` or `sudo su`, and `sudo bash -c "..."` or `sudo sh -c "..."` used for ordinary tasks. Tuning would mean excluding known admin accounts.
 
-### 3. New privileged user account created
-**TODO:** write this rule, then fill in the sections below.
 
-- **Goal:** detect a new account created with UID 0 or added to the sudo group.
-- **Attack:** the `useradd` and `usermod` commands on the VM.
-- **Before:** `![TODO](assets/ss_user_before.png)`
-- **Rule:** TODO (XML here)
-- **After:** `![TODO](assets/ss_user_after.png)`
-- **Known false positives:** TODO
 
-### 4. SSH key or cron job added for persistence
+## 3. SSH key or cron job added for persistence
+
 **TODO:** write this rule, then fill in the sections below.
 
 - **Goal:** detect changes to `authorized_keys` or to cron files, which attackers use to stay on a host.
@@ -156,7 +155,8 @@ sudo -i          # root shell
 - **After:** `![TODO](assets/ss_persist_after.png)`
 - **Known false positives:** TODO
 
-### 5. Reverse-shell style command executed
+## 4. Reverse-shell style command executed
+
 **TODO:** write this rule, then fill in the sections below.
 
 - **Goal:** detect command patterns used for reverse shells.
